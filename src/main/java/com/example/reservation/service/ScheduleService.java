@@ -22,17 +22,19 @@ public class ScheduleService {
     //스케쥴을 조회합니다.
     //회의실ID가 조회 조건입니다.
     public List<ScheduleResponse> schedules(String id) {
-        return repo.findAllByRsvRm(Room.builder().rmId(Long.valueOf(id)).build()).stream()
-                .map(schedule -> new ScheduleResponse(schedule))
+//        return repo.findAllByRsvRm(Room.builder().rmId(Long.valueOf(id)).build())
+        return repo.findAllByRsvRm(Long.valueOf(id))
+                .stream().map(sche -> new ScheduleResponse(sche))
                 .collect(Collectors.toList());
     }
 
     //특정 스케쥴을 조회합니다.
     //스케쥴 ID가 조회 조건입니다.
     public ScheduleResponse detailSchedules(String id) {
-        Schedule sr = repo.findById(Long.valueOf(id)).orElse(null);
-        if (sr != null) {
-            return new ScheduleResponse(sr);
+        Schedule schedule = repo.findById(Long.valueOf(id)).orElse(null);
+
+        if (schedule != null) {
+            return new ScheduleResponse(schedule);
         } else {
             return null;
         }
@@ -42,7 +44,6 @@ public class ScheduleService {
     //성공:success, 실패:failed
     //고급 : 다른 스케쥴이 겹치지 않을때만 삽입하세요.
     public String insertSchedule(ScheduleInsertRequest req) {
-
         try {
             Schedule sc = req.toEntity();
             if (sc.getReserveAllday().equals("1")) {
@@ -64,7 +65,7 @@ public class ScheduleService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return "failed";
         }
     }
@@ -72,14 +73,12 @@ public class ScheduleService {
     //스케쥴을 삭제합니다.
     //성공:success, 실패:failed
     public String deleteSchedule(String id) {
-
         try {
             repo.deleteById(Long.valueOf(id));
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return "failed";
         }
-
         return "success";
     }
 
@@ -89,13 +88,12 @@ public class ScheduleService {
     public String updateSchedule(ScheduleUpdateRequest req) {
         try {
             Schedule sc = req.toEntity();
-            System.out.println(sc);
             if (sc.getReserveAllday().equals("1")) {
                 int result = repo.findByAvailAllDayNativeQuery(sc);
                 if (result == 0) {
                     repo.findByOwnerAndRsvCnNo(Account.builder()
                             .usrId(req.getUsrId())
-                            .build(), Long.valueOf(req.getId())).ifPresent(en -> repo.save(sc));
+                            .build(), Long.valueOf(req.getUsrId())).ifPresent(en -> repo.save(sc));
                     return "success";
                 } else {
                     return "failed";
@@ -105,7 +103,7 @@ public class ScheduleService {
                 if (result == 0) {
                     repo.findByOwnerAndRsvCnNo(Account.builder()
                             .usrId(req.getUsrId())
-                            .build(), Long.valueOf(req.getId())).ifPresent(en -> repo.save(sc));
+                            .build(), Long.valueOf(req.getUsrId())).ifPresent(en -> repo.save(sc));
                     return "success";
                 } else {
                     return "failed";
@@ -113,7 +111,7 @@ public class ScheduleService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return "failed";
         }
     }
