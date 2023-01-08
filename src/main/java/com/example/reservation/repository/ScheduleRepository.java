@@ -14,7 +14,49 @@ import java.util.Optional;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
+//    List<Schedule> findAllByRsvRm(Room rmId);
+    List<Schedule> findAllByRsvRm(Long rmId);
+    public Optional<Schedule> findByOwnerAndRsvCnNo(Account usrId, Long cnNo);
 
+    @Query(value = "SELECT COUNT(*) FROM TH_RSV_CN " +
+            "" +
+            " WHERE " +
+            " ( " +
+            " ( " +
+            " STR_TO_DATE(:#{#sc.reserveStart},'%Y/%m/%d %H:%i')>=STR_TO_DATE(RSV_STR_DT,'%Y/%m/%d %H:%i') AND STR_TO_DATE(RSV_END_DT,'%Y/%m/%d %H:%i')>STR_TO_DATE(:#{#sc.reserveStart},'%Y/%m/%d %H:%i')" +
+            " ) " +
+            " OR " +
+            " (  " +
+            "STR_TO_DATE(:#{#sc.reserveEnd},'%Y/%m/%d %H:%i')>=STR_TO_DATE(RSV_STR_DT,'%Y/%m/%d %H:%i') AND STR_TO_DATE(RSV_END_DT,'%Y/%m/%d %H:%i')>STR_TO_DATE(:#{#sc.reserveEnd},'%Y/%m/%d %H:%i')" +
+            " ) " +
+            " OR " +
+            " ((" +
+            " STR_TO_DATE(RSV_STR_DT,'%Y/%m/%d %H:%i')>=STR_TO_DATE(:#{#sc.reserveStart},'%Y/%m/%d %H:%i') AND STR_TO_DATE(:#{#sc.reserveEnd},'%Y/%m/%d %H:%i')>STR_TO_DATE(RSV_STR_DT,'%Y/%m/%d %H:%i')" +
+            " ) " +
+            " AND " +
+            " ( " +
+            "STR_TO_DATE(RSV_END_DT,'%Y/%m/%d %H:%i')>STR_TO_DATE(:#{#sc.reserveStart},'%Y/%m/%d %H:%i') AND STR_TO_DATE(:#{#sc.reserveEnd},'%Y/%m/%d %H:%i')>=STR_TO_DATE(RSV_END_DT,'%Y/%m/%d %H:%i')" +
+            " )) " +
+            " OR " +
+            " ( " +
+            " STR_TO_DATE(:#{#sc.reserveStart},'%Y/%m/%d %H:%i')=STR_TO_DATE(RSV_STR_DT,'%Y/%m/%d %H:%i') AND STR_TO_DATE(RSV_END_DT,'%Y/%m/%d %H:%i')=STR_TO_DATE(:#{#sc.reserveEnd},'%Y/%m/%d %H:%i')" +
+            " ) " +
+            " ) " +
+            "" +
+            " AND " +
+            "" +
+            " RM_ID=:#{#sc.rsvRm.rmId} ", nativeQuery = true)
+    int findByAvailNativeQuery(@Param(value = "sc") Schedule sc);
+
+
+    @Query(value = " SELECT COUNT(RM_ID) FROM TH_RSV_CN " +
+            " WHERE " +
+            " STR_TO_DATE(:#{#sc.reserveStart},'%Y/%m/%d')=STR_TO_DATE(RSV_STR_DT,'%Y/%m/%d') " +
+            " AND " +
+            " STR_TO_DATE(:#{#sc.reserveStart},'%Y/%m/%d')=STR_TO_DATE(RSV_END_DT,'%Y/%m/%d') " +
+            " AND " +
+            " RM_ID=:#{#sc.rsvRm.rmId}", nativeQuery = true)
+    int findByAvailAllDayNativeQuery(@Param(value = "sc") Schedule sc);
 
 }
 

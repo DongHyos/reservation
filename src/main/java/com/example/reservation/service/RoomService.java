@@ -15,7 +15,9 @@ public class RoomService {
     final private RoomRepository repo;
 
     public List<RoomsResponse> rooms(String grId){
-        return null;
+        return repo.findByGrId(Long.valueOf(grId))
+                .stream().map(id -> new RoomsResponse(id))
+                .collect(Collectors.toList());
     }
 
     @Autowired

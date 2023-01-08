@@ -22,34 +22,98 @@ public class ScheduleService {
     //스케쥴을 조회합니다.
     //회의실ID가 조회 조건입니다.
     public List<ScheduleResponse> schedules(String id) {
-        return null;
+//        return repo.findAllByRsvRm(Room.builder().rmId(Long.valueOf(id)).build())
+        return repo.findAllByRsvRm(Long.valueOf(id))
+                .stream().map(sche -> new ScheduleResponse(sche))
+                .collect(Collectors.toList());
     }
 
     //특정 스케쥴을 조회합니다.
     //스케쥴 ID가 조회 조건입니다.
     public ScheduleResponse detailSchedules(String id) {
-        return null;
+        Schedule schedule = repo.findById(Long.valueOf(id)).orElse(null);
+
+        if (schedule != null) {
+            return new ScheduleResponse(schedule);
+        } else {
+            return null;
+        }
     }
 
     //단순히 스케쥴을 삽입합니다.
     //성공:success, 실패:failed
     //고급 : 다른 스케쥴이 겹치지 않을때만 삽입하세요.
     public String insertSchedule(ScheduleInsertRequest req) {
-        return null;
+        try {
+            Schedule sc = req.toEntity();
+            if (sc.getReserveAllday().equals("1")) {
+                int result = repo.findByAvailAllDayNativeQuery(sc);
+                if (result == 0) {
+                    repo.save(sc);
+                    return "success";
+                } else {
+                    return "failed";
+                }
+            } else {
+                int result = repo.findByAvailNativeQuery(sc);
+                if (result == 0) {
+                    repo.save(sc);
+                    return "success";
+                } else {
+                    return "failed";
+                }
+            }
+
+        } catch (Exception e) {
+//            e.printStackTrace();
+            return "failed";
+        }
     }
 
     //스케쥴을 삭제합니다.
     //성공:success, 실패:failed
     public String deleteSchedule(String id) {
-        return null;
+        try {
+            repo.deleteById(Long.valueOf(id));
+        } catch (Exception e) {
+//            e.printStackTrace();
+            return "failed";
+        }
+        return "success";
     }
 
     //스케쥴을 수정합니다.
     //성공:success, 실패:failed
     //고급 : 다른 스케쥴이 겹치지 않을때만 수정하세요.
     public String updateSchedule(ScheduleUpdateRequest req) {
-            return null;
+        try {
+            Schedule sc = req.toEntity();
+            if (sc.getReserveAllday().equals("1")) {
+                int result = repo.findByAvailAllDayNativeQuery(sc);
+                if (result == 0) {
+                    repo.findByOwnerAndRsvCnNo(Account.builder()
+                            .usrId(req.getUsrId())
+                            .build(), Long.valueOf(req.getUsrId())).ifPresent(en -> repo.save(sc));
+                    return "success";
+                } else {
+                    return "failed";
+                }
+            } else {
+                int result = repo.findByAvailNativeQuery(sc);
+                if (result == 0) {
+                    repo.findByOwnerAndRsvCnNo(Account.builder()
+                            .usrId(req.getUsrId())
+                            .build(), Long.valueOf(req.getUsrId())).ifPresent(en -> repo.save(sc));
+                    return "success";
+                } else {
+                    return "failed";
+                }
+            }
 
+        } catch (Exception e) {
+//            e.printStackTrace();
+            return "failed";
+        }
     }
 
     // 필드 캡슐화
